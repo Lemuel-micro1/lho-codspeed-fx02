@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voyagekit"
+version = "0.3.1"
+description = "Process AIS-style vessel position logs"
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "pytest-codspeed==5.0.3"]
+
+[tool.setuptools.packages.find]
+include = ["voyagekit*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

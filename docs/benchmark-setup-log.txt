@@ -1,0 +1,191 @@
+CodSpeed benchmark harness setup: tool-use and verification log
+Date: 2026-10-04
+Repository: Lemuel-micro1/lho-codspeed-fx02
+Starting commit: be975dc (fx02: Initial), branch main
+Host: Windows, PowerShell, CPython 3.14.7
+
+RESULT
+
+Harness implemented and correctness verified. CodSpeed CLI measurement and
+upload remain UNVERIFIED because this host has no supported Linux environment.
+The user confirmed: "There is no Linux environment". CI was added but not run.
+No performance numbers, report URL, or flamegraph were generated in this task.
+
+CONNECTOR EVIDENCE
+
+mcp__codex_apps__codspeed_list_repositories({}) returned exactly one repository:
+  Lemuel-micro1/lho-codspeed-fx01 (public; fx01 Codspeed fixture)
+
+mcp__codex_apps__codspeed_list_runs(
+  repository="Lemuel-micro1/lho-codspeed-fx02", limit=1
+) returned isError=true, error_code=INVALID_ARGUMENT:
+  Error: Repository 'Lemuel-micro1/lho-codspeed-fx02' not found.
+
+Conclusion: fx02 is absent from the CodSpeed repositories accessible through
+this connector. This does not prove the GitHub repository does not exist.
+The workspace origin is https://github.com/Lemuel-micro1/lho-codspeed-fx02.git.
+Enable/access fx02 in CodSpeed before expecting repository-linked CI reports.
+
+IMPLEMENTATION
+
+- Corrected pyproject,toml to pyproject.toml so pip and pytest recognize it.
+- Added setuptools build configuration, restricted package discovery to
+  voyagekit, and pinned pytest 9.1.1 / pytest-codspeed 5.0.3 in the dev extra.
+- Added 18 cases: parse_log, group_by_vessel, track_distance, speed_alerts across
+  four scenarios, plus summary and alert pipelines with 20,000 records each.
+- Fixed seeds, reusable input fixtures, stable IDs, and output assertions.
+  Input generation and assertions are outside measurement. Baseline totals and
+  alert counts came from the unchanged application before adding benchmarks.
+- Added .github/workflows/codspeed.yml: Ubuntu 24.04, Python 3.14, ordinary
+  correctness checks, CodSpeedHQ/action@v5 simulation, OIDC permissions.
+- Added README usage and ignored local packaging artifacts.
+- Application production code and existing correctness tests were unchanged.
+
+VERIFICATION OUTPUT (selected verbatim excerpts)
+
+1. .\.venv\Scripts\python.exe -m pip install -e '.[dev]'
+   Exit 0. Editable voyagekit 0.3.1 and dependencies installed successfully.
+
+2. .\.venv\Scripts\python.exe -m pytest -q
+   .......................                                                  [100%]
+   23 passed in 0.32s
+   Exit 0: five original tests plus eighteen benchmarks.
+
+3. .\.venv\Scripts\python.exe -m pytest tests/benchmarks --codspeed --codspeed-mode=simulation -v
+   codspeed: 5.0.3 (enabled, mode: simulation, callgraph: not supported)
+   NOTICE: codspeed is enabled, but no performance measurement will be made since it's running in an unknown environment.
+   collecting ... collected 18 items
+   ============================= 18 benchmark tested =============================
+   ============================= 18 passed in 0.46s ==============================
+   Exit 0: discovery and execution verified, simulation NOT measured.
+   These elapsed suite times are not benchmark performance results.
+
+4. codspeed --version
+   Exit 1: PowerShell CommandNotFoundException (codspeed not recognized).
+
+5. codspeed run -m simulation -- .\.venv\Scripts\python.exe -m pytest tests/benchmarks --codspeed
+   Exit 1: PowerShell CommandNotFoundException (codspeed not recognized).
+   The CLI never started. Authentication could not be checked.
+
+6. .\.venv\Scripts\python.exe -m pip check
+   No broken requirements found.
+
+7. git diff --check
+   No whitespace errors; Git emitted LF/CRLF conversion warnings.
+   New files were also inspected explicitly; CI was not executed remotely.
+
+CHALLENGES
+
+- Misnamed project metadata prevented standard project/config discovery; fixed.
+- Initial PyPI request was blocked by sandbox socket permissions (WinError
+  10013). Retried through approved elevated execution; installation succeeded.
+  The initial pip process's final "No matching distribution" message was a
+  network failure, not evidence that pytest-codspeed was unavailable.
+- Native Windows cannot run this CodSpeed CLI simulation setup. wsl --list
+  --verbose reported WSL not installed; Docker was not found on PATH; user
+  confirmed no Linux environment. No system-level WSL installation attempted.
+- pytest-codspeed's Windows wheel executes benchmarks without simulation or
+  callgraphs. Passing tests must not be interpreted as measured CLI success.
+- fx02 is not available through the connector, so repository-linked reporting
+  also needs CodSpeed integration/access configuration.
+- Some documentation URLs (/reference/cli and .md variants) failed in the web
+  tool. The documentation index led to working canonical HTML URLs.
+- Git could not read the user's global ignore file under the sandbox. Repository
+  inspection and diff checks still worked. LF/CRLF warnings were informational.
+
+TOOL-CALL USE LIST
+
+This is a chronological summarized call log, not a raw transport transcript.
+functions.exec orchestrated the batches below and printed each result. Independent
+read-only calls in a batch used Promise.allSettled. No subagents were used.
+
+01 tools.exec_command: read codspeed-setup-harness/SKILL.md. Applied the installed
+   CodSpeed skill: analyze, choose framework, exclude setup, verify/report.
+02 tools.exec_command: Get-Location, rg --files (including AGENTS.md search),
+   git status --short. Found Python files, no benchmarks or AGENTS.md, clean start.
+03 tools.create_goal: recorded the user's explicit setup/verification objective.
+04 functions.exec metadata discovery: searched ALL_TOOLS for CodSpeed tools.
+05 tools.mcp__codex_apps__codspeed_list_repositories: one accessible repository.
+06 tools.exec_command: read README, misnamed metadata, production code, tests,
+   hidden-file inventory, git remotes, and available commands. Found Python
+   3.14, no codspeed/uv/docker commands, and the wsl.exe launcher.
+07 tools.web__run: searched official CodSpeed documentation for Python, CLI,
+   and Windows requirements; found pytest-codspeed and Linux CLI support.
+08 tools.exec_command: checked WSL status, Python/pip versions, ignore and
+   attributes files, branch and latest commit. WSL was not installed.
+09 tools.mcp__codex_apps__codspeed_list_runs: direct fx02 lookup failed as above.
+10 tools.web__run: read Python integration and pytest-codspeed reference;
+   /docs/reference/cli failed to open.
+11 functions.request_user_input_async: asked whether an existing Linux
+   environment was available while proceeding with local implementation.
+   User answered that no Linux environment exists.
+12 tools.exec_command: python -m venv .venv. Succeeded.
+13 tools.exec_command: pip index versions pytest-codspeed in sandbox.
+   Network blocked; returned running session 35699 during pip retries.
+14 tools.web__run: read CodSpeed documentation index and official GitHub README.
+15 tools.exec_command (require_escalated): retried pip index through network
+   approval. Succeeded; latest available version was 5.0.3.
+16 tools.exec_command (require_escalated): pip install --dry-run pytest==9.1.1
+   pytest-codspeed==5.0.3. Both resolved, including a Windows-compatible wheel.
+17 tools.web__run: attempted CLI and CI configuration .md URLs; both failed.
+18 tools.write_stdin: collected session 35699 completion (network failure).
+19 tools.exec_command: computed deterministic workload reference totals/counts
+   with unchanged voyagekit code; attempted codspeed --version (not found).
+20 tools.web__run: read working /docs/cli and CI configuration HTML pages.
+21 tools.apply_patch: corrected metadata; added benchmarks, CI, README, ignores.
+22 tools.exec_command (require_escalated): installed editable .[dev]; returned
+   session 99021 while finishing dependency installation.
+23 tools.write_stdin: session 99021 completed successfully, exit 0.
+24 tools.exec_command: ran the complete pytest suite; 23 passed.
+25 tools.exec_command: ran CodSpeed simulation-mode pytest smoke check;
+   18 passed, explicit notice that no measurement occurred.
+26 tools.exec_command: attempted the actual codspeed run command; CLI not found.
+27 tools.exec_command: pip check, git diff --check/stat/status, PyYAML availability
+   probe (not installed), and inspection of installed plugin source. Dependencies
+   consistent; no whitespace errors. No YAML linter was available from this probe.
+28 tools.web__run: inspected the official CodSpeedHQ/action@v5 action.yml;
+   confirmed supported mode/run inputs and that the action invokes the CLI.
+29 tools.apply_patch: saved this audit and verification record.
+30 tools.exec_command: final readback of project metadata, workflow and log;
+   final whitespace/status check (see tool transcript for complete output).
+31 tools.exec_command (goal continuation 1): re-read Git status, CI workflow,
+   and outstanding verification requirements. Probed gh, codspeed, and docker;
+   none was found on PATH. Workflow changes remain local and uncommitted.
+32 tools.get_goal: confirmed that CLI verification is still part of the active
+   objective; did not mark the goal complete based on the passing smoke tests.
+33 tools.apply_patch: recorded this continuation audit. The previous turn made
+   progress by implementing and testing the harness. The Linux execution
+   blocker persists for a second goal turn. No live remote CI job exists in
+   this task, and no GitHub CLI is installed to dispatch one. CLI execution,
+   authentication, upload, and flamegraphs remain unverified.
+34 tools.exec_command (goal continuation 2): rechecked available commands, WSL,
+   Git status and outstanding verification. CodSpeed/Docker/GitHub CLI remain
+   absent from PATH; WSL still reports not installed. No environment change.
+35 tools.update_goal(status="blocked"): marked the objective blocked after the
+   same Linux execution requirement persisted across three consecutive goal
+   turns. The previous continuation made no progress on actual CLI execution.
+   Completing the goal needs external Linux execution access; smoke-test
+   success alone does not satisfy the full objective.
+36 tools.apply_patch: recorded the final blocked audit and goal status.
+
+OFFICIAL REFERENCES CONSULTED
+
+https://codspeed.io/docs/benchmarks/python
+https://codspeed.io/docs/reference/pytest-codspeed
+https://codspeed.io/docs/cli
+https://codspeed.io/docs/integrations/ci/github-actions/configuration
+https://raw.githubusercontent.com/CodSpeedHQ/action/v5/action.yml
+https://github.com/CodSpeedHQ/codspeed
+
+REMAINING VERIFICATION ON LINUX
+
+Install the project with its dev extra in a Python 3.12+ virtual environment.
+Install CodSpeed CLI following https://codspeed.io/docs/cli, then run:
+
+  codspeed auth login
+  codspeed run -m simulation -- python -m pytest tests/benchmarks --codspeed
+
+Require 18 measured benchmarks, successful result upload, a report URL, and
+available flamegraphs before considering end-to-end CLI verification complete.
+The added GitHub workflow supplies an alternative Linux execution environment
+once the changes are pushed and fx02 has CodSpeed integration/access enabled.
