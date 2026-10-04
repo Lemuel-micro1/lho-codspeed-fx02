@@ -1,0 +1,12 @@
+[project]
+name = "voyagekit"
+version = "0.3.1"
+description = "Process AIS-style vessel position logs"
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
